@@ -1,14 +1,31 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
+	"encoding/json"
 )
 
-func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello World!")
-	})
-	http.ListenAndServe(":80", nil)
-	fmt.Println("123")
+type SearchResults struct {
+	ready   bool
+	Query   string
+	Results []Result
+}
+
+type Result struct {
+	Name, Description, URL string
+}
+
+func (sr *SearchResults) UnmarshalJSON(bs []byte) error {
+	array := []interface{}{}
+	if err := json.Unmarshal(bs, &array); err != nil {
+		return err
+	}
+	sr.Query = array[0].(string)
+	for i := range array[1].([]interface{}) {
+		sr.Results = append(sr.Results, Result{
+			array[1].([]interface{})[i].(string),
+			array[2].([]interface{})[i].(string),
+			array[3].([]interface{})[i].(string),
+		})
+	}
+	return nil
 }
